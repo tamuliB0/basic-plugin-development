@@ -117,18 +117,66 @@ function wp_book_register_taxonomies() {
 add_action( 'init', 'wp_book_register_taxonomies' );
 
 /**
+ * Runs on plugin activation.
+ */
+function wp_book_create_meta_table() {
+	global $wpdb;
+
+	$table_name      = $wpdb->prefix . 'book_meta';
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		meta_id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		book_id bigint(20) unsigned NOT NULL,
+		author_name varchar(255) DEFAULT '' NOT NULL,
+		price decimal(10,2) DEFAULT 0.00 NOT NULL,
+		publisher varchar(255) DEFAULT '' NOT NULL,
+		year int(4) DEFAULT 0 NOT NULL,
+		edition varchar(100) DEFAULT '' NOT NULL,
+		book_url varchar(255) DEFAULT '' NOT NULL,
+		PRIMARY KEY  (meta_id),
+		UNIQUE KEY book_id (book_id)
+	) $charset_collate;";
+
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+}
+register_activation_hook( __FILE__, 'wp_book_create_meta_table' );
+
+/**
  * Adds a custom meta box to Book post type edit screen.
  */
 function wp_book_add_custom_box() {
-        add_meta_box(
-            'wp_book_details_box',
-            __( 'Book Information', 'wp-book' ),
-            'wp_book_custom_box_html',
-            'book'
-        );
+	add_meta_box(
+        'wp_book_details_box',
+        __( 'Book Information', 'wp-book' ),
+        'wp_book_custom_box_html',
+        'book',
+		'normal'
+    );
 }
 add_action( 'add_meta_boxes', 'wp_book_add_custom_box' );
 
+/**
+ * Renders the HTML for the custom book meta box.
+ */
 function wp_book_custom_box_html() {
-    echo 'Metabox Content';
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'book_meta';
+
+    wp_nonce_field( 'wp_book_save_meta', 'wp_book_nonce' ); ?>
+    
+    <label>Author name:</label>
+    <input type="text" name="book_author"> 
+	<label>Price:</label>
+    <input type="text" name="book_price"> 
+	<label>Publisher:</label>
+    <input type="text" name="book_publisher"> 
+	<label>Year:</label>
+    <input type="text" name="book_year"> 
+	<label>Edition:</label>
+    <input type="text" name="book_edition"> 
+	<label>URL:</label>
+    <input type="text" name="book_url"> 
+	<?php
 }
