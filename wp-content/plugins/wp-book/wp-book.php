@@ -115,3 +115,20 @@ function wp_book_register_taxonomies() {
 	register_taxonomy( 'book-tag', 'book', $args );
 }
 add_action( 'init', 'wp_book_register_taxonomies' );
+
+/**
+ * Adds a custom meta box to Book post type edit screen.
+ */
+function wp_book_add_custom_box() {
+        add_meta_box(
+            'wp_book_details_box',
+            __( 'Book Information', 'wp-book' ),
+            'wp_book_custom_box_html',
+            'book'
+        );
+}
+add_action( 'add_meta_boxes', 'wp_book_add_custom_box' );
+
+function wp_book_custom_box_html() {
+    echo 'Metabox Content';
+}
