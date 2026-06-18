@@ -13,3 +13,13 @@ function wp_book_register_admin_page() {
 	);
 }
 add_action( 'admin_menu', 'wp_book_register_admin_page' );
+
+/**
+ * Display callback for the submenu page.
+ */
+function wp_book_settings_page_html() { 
+    ?>
+    <h1><?php _e( 'WP-Book', 'textdomain' ); ?></h1>
+    <p><?php _e( 'Configure display settings for book', 'textdomain' ); ?></p>
+    <?php
+}
