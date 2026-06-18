@@ -53,7 +53,7 @@ function wp_book_register_settings() {
 		array(
 			'type'              => 'integer',
 			'sanitize_callback' => 'wp_book_validate_per_page_books_input',
-			'default'           => 10,
+			'default'           => 5,
 		)
 	);
     
@@ -116,10 +116,10 @@ function wp_book_currency_field_html() {
 }
 
 /**
- * Currency field callback.
+ * Per page books field callback.
  */
 function wp_book_per_page_books_field_html() {
-    $value = get_option( 'wp_book_books_per_page', 5 );
+    $value = get_option( 'wp_book_per_page_books', 5 );
 	?>
 	<input type="number" name="wp_book_books_per_page" value="<?php echo esc_attr( $value ); ?>" />
 	<?php 
