@@ -68,16 +68,14 @@ function wp_book_register_taxonomies() {
 		'new_item_name'     => __( 'New Book Category', 'wp-book' ),
 		'menu_name'         => __( 'Book Category', 'wp-book' ),
 	);
-
 	$args = array(
 		'hierarchical'      => true,
 		'labels'            => $labels,
 		'show_ui'           => true,
 		'show_admin_column' => true,
 		'query_var'         => true,
-		'rewrite'           => array( 'slug' => 'book-category' ),
+		'rewrite'           => array( 'slug' => 'book' ),
 	);
-
 	register_taxonomy( 'book-category', array( 'book' ), $args );
 
 	unset( $args );
@@ -101,7 +99,6 @@ function wp_book_register_taxonomies() {
 		'not_found'                  => __( 'No Book Tag found.', 'wp-book' ),
 		'menu_name'                  => __( 'Book Tag', 'wp-book' ),
 	);
-
 	$args = array(
 		'hierarchical'          => false,
 		'labels'                => $labels,
@@ -109,9 +106,8 @@ function wp_book_register_taxonomies() {
 		'show_admin_column'     => true,
 		'update_count_callback' => '_update_post_term_count',
 		'query_var'             => true,
-		'rewrite'               => array( 'slug' => 'writer' ),
+		'rewrite'               => array( 'slug' => 'book' ),
 	);
-
 	register_taxonomy( 'book-tag', 'book', $args );
 }
 add_action( 'init', 'wp_book_register_taxonomies' );
@@ -158,25 +154,124 @@ function wp_book_add_custom_box() {
 add_action( 'add_meta_boxes', 'wp_book_add_custom_box' );
 
 /**
- * Renders the HTML for the custom book meta box.
+ * Get book meta data for a book post.
+ *
+ * @param int $post_id Book post ID.
  */
-function wp_book_custom_box_html() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'book_meta';
+function wp_book_get_book_meta( $post_id ) {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'book_meta';
 
-    wp_nonce_field( 'wp_book_save_meta', 'wp_book_nonce' ); ?>
+	return $wpdb->get_row(
+		$wpdb->prepare( 
+			"SELECT * FROM $table_name WHERE book_id = %d",
+			$post_id
+		),
+		ARRAY_A
+	);
+}
+
+/**
+ * Display meta box fields.
+ *
+ * @param WP_Post $post Current post object.
+ */
+function wp_book_custom_box_html( $post ) {
+
+	$book_meta = wp_book_get_book_meta( $post->ID );
+
+    wp_nonce_field( 'wp_book_save_meta_box', 'wp_book_meta_box_nonce' ); 
     
-    <label>Author name:</label>
-    <input type="text" name="book_author"> 
-	<label>Price:</label>
-    <input type="text" name="book_price"> 
-	<label>Publisher:</label>
-    <input type="text" name="book_publisher"> 
-	<label>Year:</label>
-    <input type="text" name="book_year"> 
-	<label>Edition:</label>
-    <input type="text" name="book_edition"> 
-	<label>URL:</label>
-    <input type="text" name="book_url"> 
+	$author_name = $book_meta[ 'author_name' ] ?? '';
+	$price = $book_meta[ 'price' ] ?? '';
+	$publisher = $book_meta[ 'publisher' ] ?? '';
+	$year = $book_meta[ 'year' ] ?? '';
+	$edition = $book_meta[ 'edition' ] ?? '';
+	$book_url = $book_meta[ 'book_url' ] ?? '';
+	?>
+    <label><?php esc_html_e('Author name:', 'wp-book'); ?></label>
+    <input type="text" value="<?php echo esc_attr( $author_name ) ?>" name="wp_book_author_name"> 
+
+	<label><?php esc_html_e('Price:', 'wp-book'); ?></label>
+    <input type="number" value="<?php echo esc_attr( $price ) ?>" name="wp_book_price"> 
+
+	<label><?php esc_html_e('Publisher:', 'wp-book'); ?></label>
+    <input type="text" value="<?php echo esc_attr( $publisher ) ?>" name="wp_book_publisher"> 
+
+	<label><?php esc_html_e('Year:', 'wp-book'); ?></label>
+    <input type="number" value="<?php echo esc_attr( $year ) ?>" name="wp_book_year"> 
+
+	<label><?php esc_html_e('Edition:', 'wp-book'); ?></label>
+    <input type="text" value="<?php echo esc_attr( $edition ) ?>" name="wp_book_edition"> 
+	
+	<label><?php esc_html_e('URL:', 'wp-book'); ?></label>
+    <input type="text" value="<?php echo esc_attr( $book_url ) ?>" name="wp_book_url"> 
 	<?php
 }
+
+/**
+ * Save book meta box data.
+ *
+ * @param int $post_id Book post ID.
+ */
+function wp_book_save_meta_box( $post_id ) {
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! isset( $_POST['wp_book_meta_box_nonce'] ) ) {
+		return;
+	}
+
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wp_book_meta_box_nonce'] ) ), 'wp_book_save_meta_box' ) ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'book_meta';
+
+	$author_name = isset( $_POST['wp_book_author_name'] ) ? sanitize_text_field( wp_unslash( $_POST['wp_book_author_name'] ) ) : '';
+	$price       = isset( $_POST['wp_book_price'] ) ? floatval( wp_unslash( $_POST['wp_book_price'] ) ) : 0;
+	$publisher   = isset( $_POST['wp_book_publisher'] ) ? sanitize_text_field( wp_unslash( $_POST['wp_book_publisher'] ) ) : '';
+	$year        = isset( $_POST['wp_book_year'] ) ? intval( wp_unslash( $_POST['wp_book_year'] ) ) : 0;
+	$edition     = isset( $_POST['wp_book_edition'] ) ? sanitize_text_field( wp_unslash( $_POST['wp_book_edition'] ) ) : '';
+	$book_url    = isset( $_POST['wp_book_url'] ) ? esc_url_raw( wp_unslash( $_POST['wp_book_url'] ) ) : '';
+
+	$data = array(
+		'book_id'      => $post_id,
+		'author_name'  => $author_name,
+		'price'        => $price,
+		'publisher'    => $publisher,
+		'year'         => $year,
+		'edition'      => $edition,
+		'book_url'     => $book_url,
+	);
+
+	$formats = array( '%d', '%s', '%f', '%s', '%d', '%s', '%s' );
+	$existing = $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT meta_id FROM $table_name WHERE book_id = %d",
+			$post_id
+		)
+	);
+	if ( $existing ) {
+		$result = $wpdb->update(
+			$table_name,
+			$data,
+			array( 'book_id' => $post_id ),
+			$formats,
+			array( '%d' )
+		);
+	} else {
+		$result = $wpdb->insert(
+			$table_name,
+			$data,
+			$formats
+		);
+	}
+}
+add_action( 'save_post_book', 'wp_book_save_meta_box' );
