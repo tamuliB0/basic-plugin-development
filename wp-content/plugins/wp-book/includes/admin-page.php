@@ -25,7 +25,7 @@ function wp_book_register_settings() {
         'wp_book_settings'
     );
     add_settings_field(
-		'wp_book_curreny',
+		'wp_book_currency',
 		__( 'Choose currency', 'wp-book' ),
 		'wp_book_currency_field_html',
 		'wp_book_settings',
@@ -110,7 +110,7 @@ function wp_book_currency_field_html() {
 		<option value="INR" <?php selected( $value, 'INR' ); ?>><?php esc_html_e( 'INR', 'wp-book' ); ?></option>
 		<option value="USD" <?php selected( $value, 'USD' ); ?>><?php esc_html_e( 'USD', 'wp-book' ); ?></option>
 		<option value="EUR" <?php selected( $value, 'EUR' ); ?>><?php esc_html_e( 'EUR', 'wp-book' ); ?></option>
-		<option value="EUR" <?php selected( $value, 'RUB' ); ?>><?php esc_html_e( 'RUB', 'wp-book' ); ?></option>
+		<option value="RUB" <?php selected( $value, 'RUB' ); ?>><?php esc_html_e( 'RUB', 'wp-book' ); ?></option>
 	</select>
 	<?php 
 }
@@ -121,7 +121,7 @@ function wp_book_currency_field_html() {
 function wp_book_per_page_books_field_html() {
     $value = get_option( 'wp_book_per_page_books', 5 );
 	?>
-	<input type="number" name="wp_book_books_per_page" value="<?php echo esc_attr( $value ); ?>" />
+	<input type="number" name="wp_book_per_page_books" value="<?php echo esc_attr( $value ); ?>" />
 	<?php 
 }
 
