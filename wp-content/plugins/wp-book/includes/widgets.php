@@ -37,3 +37,16 @@ function wp_book_dashboard_widget_html() {
     }
     echo '</ul>';
 }
+
+/**
+ * Register WP Book sidebar.
+ */
+function wp_book_register_sidebar() {
+    register_sidebar(
+        array(
+            'name' => __( 'WP Book Sidebar', 'wp-book' ),
+            'id'   => 'wp-book-sidebar',
+        )
+    );
+}
+add_action( 'widgets_init', 'wp_book_register_sidebar' );
