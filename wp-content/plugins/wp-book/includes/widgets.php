@@ -71,6 +71,44 @@ class WP_Book_Category_Widget extends WP_Widget {
 		'after_widget'  => '</div></div>',
 	);
 
+    public function form( $instance ) {
+		$category_id = ! empty( $instance['category_id'] ) ? $instance['category_id'] : '';
+		$terms = get_terms(
+			array(
+				'taxonomy'   => 'book-category',
+				'hide_empty' => false,
+			)
+		);
+		?>
+		<p>
+			<label>
+				<?php esc_html_e( 'Book Category:', 'wp-book' ); ?>
+			</label>
+			<select name="<?php echo esc_attr( $this->get_field_name( 'category_id' ) ); ?>">
+				<option value=""><?php esc_html_e( 'Select category', 'wp-book' ); ?></option>
+				<?php
+				if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+					foreach ( $terms as $term ) {
+						?>
+						<option value="<?php echo esc_attr( $term->term_id ); ?>" <?php selected( $category_id, $term->term_id ); ?>>
+							<?php echo esc_html( $term->name ); ?>
+						</option>
+						<?php
+					}
+				}
+				?>
+			</select>
+		</p>
+		<?php
+	}
+
+    public function update( $new_instance, $old_instance ) {
+		$instance                = [];
+		$instance['category_id'] = ! empty( $new_instance['category_id'] ) ? absint( $new_instance['category_id'] ) : '';
+
+		return $instance;
+	}
+
 	public function widget( $args, $instance ) {
 		echo $args['before_widget'];
         $category_id = ! empty( $instance['category_id'] ) ? absint( $instance['category_id'] ) : 0;
