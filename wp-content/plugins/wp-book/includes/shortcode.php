@@ -19,10 +19,12 @@ function wp_book_shortcode( $atts = array() ) {
 		'book'
 	);
 
-	$book_id      = absint( $atts['id'] );
-	$author_name  = sanitize_text_field( $atts['author_name'] );
-	$year         = absint( $atts['year'] );
-	$publisher    = sanitize_text_field( $atts['publisher'] );
+	$book_id        = absint( $atts['id'] );
+	$author_name    = sanitize_text_field( $atts['author_name'] );
+	$year           = absint( $atts['year'] );
+	$category       = sanitize_text_field( $atts['category'] );
+	$tag    	    = sanitize_text_field( $atts['tag'] );
+	$publisher      = sanitize_text_field( $atts['publisher'] );
 	$posts_per_page = absint( get_option( 'wp_book_per_page_books', 5 ) );
 
 	global $wpdb;
@@ -35,8 +37,29 @@ function wp_book_shortcode( $atts = array() ) {
 	];
 
 	if ( $book_id ) {
-		$query_args['p'] = $book_id;
+		$query_args['p']              = $book_id;
 		$query_args['posts_per_page'] = 1;
+	}
+	$tax_query = [];
+	if ( ! empty( $category ) ) {
+		$tax_query[] = [
+			'taxonomy' => 'book-category',
+			'field'    => 'slug',
+			'terms'    => $category
+		];
+	}
+	if ( ! empty( $tag ) ) {
+		$tax_query[] = [
+			'taxonomy' => 'book-tag',
+			'field'    => 'slug',
+			'terms'    => $tag
+		];
+	}
+	if ( count( $tax_query ) > 1  ) {
+		$tax_query[ 'relation' ] = 'AND';
+	}
+	if ( ! empty( $tax_query ) ) {
+		$query_args[ 'tax_query' ] = $tax_query;
 	}
 
 	$books = new WP_Query( $query_args );
@@ -67,7 +90,7 @@ function wp_book_shortcode( $atts = array() ) {
 			if ( ! empty( $publisher ) && $publisher !== $book_meta->publisher ) {
 				continue;
 			}
-			if ( ! empty( $year ) &&  $year !== $book_meta->year ) {
+			if ( ! empty( $year ) &&  $year !== ( int ) $book_meta->year ) {
 				continue;
 			}
 			?>
