@@ -129,7 +129,7 @@ class WP_Book_Category_Widget extends WP_Widget {
             if ( $book_query->have_posts() ) {
                 echo '<ul>';
                 while ( $book_query->have_posts() ) {
-                    $book_query->have_posts();
+                    $book_query->the_post();
                     echo '<li><a href="' . esc_url( get_permalink() ) . '">' . esc_html( get_the_title() ) . '</a></li>';
                 }
                 echo '</ul>';
