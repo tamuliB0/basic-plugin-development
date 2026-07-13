@@ -19,5 +19,6 @@ require_once $dir . 'includes/meta-box.php';
 require_once $dir . 'includes/save-meta.php';
 require_once $dir . 'includes/admin-page.php';
 require_once $dir . 'includes/shortcode.php';
+require_once $dir . 'includes/widgets.php';
 
 register_activation_hook( __FILE__, 'wp_book_create_meta_table' );
